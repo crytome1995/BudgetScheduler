@@ -1,0 +1,11 @@
+{
+    "python.pythonPath": ".venv/bin/python",
+    "python.terminal.executeInFileDir": true,
+    "python.autoComplete.extraPaths": [
+        "./Lambda/lambda_function/"
+    ],
+    "python.analysis.extraPaths": [
+        "./Lambda/lambda_function/"
+    ],
+        
+}
