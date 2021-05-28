@@ -8,9 +8,17 @@ client = boto3.client('events')
 lambda_client = boto3.client('lambda')
 
 USERNAME_KEY = "userName"
+ENABLED_KEY = "enable"
 
 def create_cloudwatch_event(event, context): 
     config.username = event[USERNAME_KEY]
+    enabled = event[ENABLED_KEY]
+    if(enabled):
+        # setup the event and rule pointing to function
+        print("SUCC")
+    else:
+        #delete the event by username
+        print("ERROR")
     print(config.username)
 
 
@@ -24,6 +32,9 @@ def build_cloudwatch_event(eventName):
     )
 
 def build_cloudwatch_event_target(eventName):
+    '''
+    Add the lambda target to the cloudwatch event
+    '''
     lambda_arn = get_lambda_arn()
     lambda_input = get_input_for_lambda()
     client.put_targets(
@@ -55,4 +66,36 @@ def get_lambda_arn():
     #ARN of the function
     return alias_dict['Configuration']['FunctionArn']
 
-build_cloudwatch_event_target('testevent')
+def delete_event_rule(eventName):
+    '''
+    Delete the cloudwatch event rule 
+    '''
+    delete_response = client.delete_rule(
+            Name=eventName,
+            Force=True
+    )
+
+def delete_event_rule_targets(eventName):
+    '''
+    Delete the target from the cloudwatch event rule targets
+    '''
+    delete_response = client.remove_targets(
+        Rule=eventName,
+        Ids = [
+            eventName
+        ],
+        Force=True
+    )
+
+
+def errorStatus(error):
+    return {
+        'statusCode': 500,
+        'body': error
+    }
+
+def successStatus():
+    return {
+        'statusCode': 200,
+        'body': 'Ok'
+    }
