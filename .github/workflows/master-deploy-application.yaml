@@ -4,7 +4,7 @@ on:
     types: [opened]
     branches: [main]
 jobs:
-  Run-Unit_Tests:
+  Run-Integration-Tests:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
