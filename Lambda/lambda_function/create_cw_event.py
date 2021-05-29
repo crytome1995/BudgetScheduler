@@ -36,7 +36,7 @@ def create_cloudwatch_event(event, context):
 
 def build_cloudwatch_event(event_name):
     # Every SUNDAY
-    client.put_rule(
+    return client.put_rule(
         Name=event_name,
         ScheduleExpression=scheduleExpression,
         State='DISABLED'
@@ -64,7 +64,7 @@ def build_cloudwatch_event_target(event_name):
     '''
     lambda_arn = get_lambda_arn()
     lambda_input = get_input_for_lambda()
-    client.put_targets(
+    return client.put_targets(
         Rule=event_name,
         Targets=[
             {
@@ -76,7 +76,12 @@ def build_cloudwatch_event_target(event_name):
     )
 
 def disable_cloudwatch_event(event_name):
-    client.disable_rule(
+    return client.disable_rule(
+        Name=event_name
+    )
+
+def enable_cloudwatch_event(event_name):
+    return client.enable_rule(
         Name=event_name
     )
 
@@ -102,7 +107,7 @@ def delete_event_rule(event_name):
     '''
     Delete the cloudwatch event rule 
     '''
-    delete_response = client.delete_rule(
+    return client.delete_rule(
             Name=event_name,
             Force=True
     )
@@ -111,7 +116,7 @@ def delete_event_rule_targets(event_name):
     '''
     Delete the target from the cloudwatch event rule targets
     '''
-    delete_response = client.remove_targets(
+    return client.remove_targets(
         Rule=event_name,
         Ids = [
             event_name
