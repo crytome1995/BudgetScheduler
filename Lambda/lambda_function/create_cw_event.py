@@ -2,50 +2,82 @@ import boto3
 from config import config
 import os
 import json
-
+scheduleExpression = "cron(0 12 ? * SUN *)"
 os.environ["AWS_DEFAULT_REGION"] = config.default_region
 client = boto3.client('events')
 lambda_client = boto3.client('lambda')
+dynamo = boto3.client('dynamodb')
 
 USERNAME_KEY = "userName"
 ENABLED_KEY = "enable"
 
+#Status for event
+CREATING = "CREATION"
+ENABLED = "ENABLED"
+DISABLED = "DISABLED"
+DISABLING = "DISABLING"
+
 def create_cloudwatch_event(event, context): 
     config.username = event[USERNAME_KEY]
+    event_name = ''.join(c for c in config.username if c.isalnum()) + "-budgeter"
     enabled = event[ENABLED_KEY]
     if(enabled):
-        # setup the event and rule pointing to function
-        print("SUCC")
+        update_schedule_status(CREATING)
+        build_cloudwatch_event(event_name)
+        build_cloudwatch_event_target(event_name)
+        update_schedule_status(ENABLED)
     else:
-        #delete the event by username
-        print("ERROR")
-    print(config.username)
+        #disable the event by username
+        update_schedule_status(DISABLING)
+        disable_cloudwatch_event(event_name)
+        update_schedule_status(DISABLED)
+    return successStatus()
 
 
-def build_cloudwatch_event(eventName):
+def build_cloudwatch_event(event_name):
     # Every SUNDAY
-    scheduleExpression = "cron(0 12 ? * SUN *)"
     client.put_rule(
-        Name=eventName,
+        Name=event_name,
         ScheduleExpression=scheduleExpression,
         State='DISABLED'
     )
 
-def build_cloudwatch_event_target(eventName):
+def update_schedule_status(status):
+    dynamo.put_item(
+        TableName=config.schedule_table_name,
+        Item={
+                "user": {
+                    "S": config.username
+                },
+                "status": {
+                    "S": status
+                },
+                "schedule": {
+                    "S": scheduleExpression
+                }
+            }
+        
+    )
+def build_cloudwatch_event_target(event_name):
     '''
     Add the lambda target to the cloudwatch event
     '''
     lambda_arn = get_lambda_arn()
     lambda_input = get_input_for_lambda()
     client.put_targets(
-        Rule=eventName,
+        Rule=event_name,
         Targets=[
             {
-                'Id': eventName,
+                'Id': event_name,
                 'Arn': lambda_arn,
                 'Input': lambda_input
             }
         ]
+    )
+
+def disable_cloudwatch_event(event_name):
+    client.disable_rule(
+        Name=event_name
     )
 
 def get_input_for_lambda():
@@ -66,23 +98,23 @@ def get_lambda_arn():
     #ARN of the function
     return alias_dict['Configuration']['FunctionArn']
 
-def delete_event_rule(eventName):
+def delete_event_rule(event_name):
     '''
     Delete the cloudwatch event rule 
     '''
     delete_response = client.delete_rule(
-            Name=eventName,
+            Name=event_name,
             Force=True
     )
 
-def delete_event_rule_targets(eventName):
+def delete_event_rule_targets(event_name):
     '''
     Delete the target from the cloudwatch event rule targets
     '''
     delete_response = client.remove_targets(
-        Rule=eventName,
+        Rule=event_name,
         Ids = [
-            eventName
+            event_name
         ],
         Force=True
     )
@@ -99,3 +131,4 @@ def successStatus():
         'statusCode': 200,
         'body': 'Ok'
     }
+
