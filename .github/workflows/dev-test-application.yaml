@@ -19,4 +19,4 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r Lambda/lambda_function/requirements.txt
       - name: Run tests with pytest
-        run: pytest -m unit
+        run: pytest -m unit --disable-warnings
