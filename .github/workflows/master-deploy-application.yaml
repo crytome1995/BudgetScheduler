@@ -1,27 +1,27 @@
-name: Test python app
+name: Deploy Lambda
 on: 
-  pull_request:
-    types: [opened]
+  push:
     branches: [main]
 jobs:
-  Run-Integration-Tests:
+  deploy_zip:
+    name: deploy lambda function
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          ref: dev
-      - name: Install Python 3
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.9
-      - name: Install dependencies
+      - name: checkout source code
+        uses: actions/checkout@v1
+      - name: Zip code
         run: |
-          python -m pip install --upgrade pip
-          pip install -r Lambda/lambda_function/requirements.txt
-      - name: Run integration tests with pytest
-        run: pytest -m int --disable-warnings -p no:randomly
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          cd Lambda && zip deployment.zip lambda_function
+      - name: default deploy
+        uses: appleboy/lambda-action@master
+        with:
+          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws_region: ${{ secrets.AWS_REGION }}
+          function_name: budgetScheduler
+          zip_file: Lambda/deployment.zip
+          memory_size: 128
+          timeout: 20
+          handler: lambda_function.lambda_handler
+          role: arn:aws:iam::982658172500:role/lambda_budget_scheduler_policy
+          runtime: python3.7 
