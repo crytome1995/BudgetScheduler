@@ -21,7 +21,7 @@ jobs:
           function_name: budget_scheduler
           zip_file: Lambda/deployment.zip
           memory_size: 128
-          timeout: 30
+          timeout: 35
           handler: lambda_function.lambda_handler
           role: arn:aws:iam::982658172500:role/lambda_budget_scheduler_policy
           runtime: python3.7 
