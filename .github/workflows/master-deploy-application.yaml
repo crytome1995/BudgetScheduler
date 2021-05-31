@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@v1
       - name: Zip code
         run: |
-          cd Lambda && echo ${{ secrets.AWS_DEFAULT_REGION }} && zip deployment.zip lambda_function/
+          cd Lambda && zip deployment.zip lambda_function/
       - name: default deploy
         uses: appleboy/lambda-action@master
         with:
