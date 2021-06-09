@@ -2,7 +2,7 @@ import os
 
 
 class ConfigDefaults:
-    LAMBDA_RULE_NAME = 'testfunction'
+    LAMBDA_RULE_NAME = 'budget_reporter'
     DEFAULT_AWS_REGION = 'us-east-2'
     SCHEDULE_TABLE_NAME = "schedulers"
 
@@ -29,7 +29,7 @@ class Configuration(ConfigDefaults):
 
     @property
     def username(self):
-        return 'ethan'
+        return self._username
     
     @username.setter
     def username(self, u):
