@@ -2,7 +2,7 @@ import boto3
 from config import config
 import os
 import json
-scheduleExpression = "cron(0 12 ? * SUN *)"
+scheduleExpression = "cron(0 20 ? * SUN *)"
 os.environ["AWS_DEFAULT_REGION"] = config.default_region
 client = boto3.client('events')
 lambda_client = boto3.client('lambda')
